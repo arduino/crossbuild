@@ -18,9 +18,11 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         libz-dev \
         # Install Windows cross-tools
         mingw-w64 \
+        xsltproc \
         p7zip-full \
         pkg-config \
         tar \
+        unzip \
     && rm -rf /var/lib/apt/lists/*
 # Install toolchains in /opt
 RUN curl downloads.arduino.cc/tools/internal/toolchains.tar.gz | tar -xz "opt"
@@ -72,6 +74,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         mingw-w64 \
         pkg-config \
         tar \
+        bison \
+        flex \
     && rm -rf /var/lib/apt/lists/*
 # Set toolchains paths
 # arm-linux-gnueabihf-gcc -> linux_arm
