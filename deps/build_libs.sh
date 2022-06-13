@@ -45,7 +45,7 @@ else
   make install
 fi
 
-cd /opt/lib/libftdi1-1.5
+cd /opt/lib/libftdi1-1.4
 rm -rf build && mkdir build && cd build
 
 CMAKE_EXTRA_FLAG="-DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF"
