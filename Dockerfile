@@ -23,6 +23,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         pkg-config \
         tar \
         unzip \
+        llvm \
     && rm -rf /var/lib/apt/lists/*
 # Install toolchains in /opt
 RUN curl downloads.arduino.cc/tools/internal/toolchains.tar.gz | tar -xz "opt"
@@ -30,11 +31,12 @@ RUN curl downloads.arduino.cc/tools/internal/toolchains.tar.gz | tar -xz "opt"
     # curl -L 'https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz' | tar -xJC /opt && \
     # curl -L 'https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz' | tar -xJC /opt
 
-RUN cd /opt/osxcross \
-    git pull \
-    # use a specific version of osxcross (it does not have tags)
-    git checkout da2c3d4ff604458a931b08b3af800c5a454136de \
-    UNATTENDED=1 SDK_VERSION=10.15 ./build.sh
+RUN cd /opt/osxcross && \
+    git pull && \
+    # use a specific version of osxcross (it does not have tags), this commit has the automatic install of compiler_rt libraries
+    git checkout b875d7c1360c8ff2077463d7a5a12e1cff1cc683 && \
+    UNATTENDED=1 SDK_VERSION=10.15 ./build.sh && \
+    ENABLE_COMPILER_RT_INSTALL=1 SDK_VERSION=10.15 ./build_compiler_rt.sh
 # Set toolchains paths
 # arm-linux-gnueabihf-gcc -> linux_arm
 # aarch64-linux-gnu-gcc -> linux_arm64
@@ -59,6 +61,7 @@ RUN CROSS_COMPILE=x86_64-ubuntu16.04-linux-gnu /opt/lib/build_libs.sh && \
 FROM ubuntu:latest
 # Copy all the installed toolchains and compiled libs
 COPY --from=build /opt /opt
+COPY --from=build /usr/lib/llvm-10/lib/clang/10.0.0 /usr/lib/llvm-10/lib/clang/10.0.0
 ENV TZ=Europe/Rome
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update && \
