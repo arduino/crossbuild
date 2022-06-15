@@ -12,11 +12,11 @@ export CXX=$CROSS_COMPILER++
 CROSS_COMPILER=$CC
 CROSS_COMPILER_CXX=$CXX
 fi
-cd /opt/lib/libusb-1.0.20
+cd /opt/lib/libusb-1.0.26
 export LIBUSB_DIR=`pwd`
-./configure --prefix=${PREFIX} --disable-udev --enable-static --disable-shared --host=${CROSS_COMPILE}
+./configure --prefix=${PREFIX} --with-pic --disable-udev --enable-static --disable-shared --host=${CROSS_COMPILE}
 make distclean
-./configure --prefix=${PREFIX} --disable-udev --enable-static --disable-shared --host=${CROSS_COMPILE}
+./configure --prefix=${PREFIX} --with-pic --disable-udev --enable-static --disable-shared --host=${CROSS_COMPILE}
 make
 make install
 
@@ -36,7 +36,7 @@ else
     export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
     export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
   fi
-  cd /opt/lib/libusb-compat-0.1.5
+  cd /opt/lib/libusb-compat-0.1.7
   export LIBUSB0_DIR=`pwd`
   PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix=${PREFIX} --enable-static --disable-shared --host=${CROSS_COMPILE}
   make distclean
@@ -45,7 +45,7 @@ else
   make install
 fi
 
-cd /opt/lib/libftdi1-1.4
+cd /opt/lib/libftdi1-1.5
 rm -rf build && mkdir build && cd build
 
 CMAKE_EXTRA_FLAG="-DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF"
@@ -104,7 +104,7 @@ make
 make install
 fi
 
-cd /opt/lib/hidapi
+cd /opt/lib/hidapi-0.12.0
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 ./bootstrap
 ./configure --prefix=$PREFIX --enable-static --disable-shared --host=$CROSS_COMPILE
