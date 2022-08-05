@@ -5,8 +5,8 @@ To build HIDAPI with CMake, it has to be [installed](#installing-cmake)/availabl
 Make sure you've checked [prerequisites](BUILD.md#prerequisites) and installed all required dependencies.
 
 HIDAPI CMake build system allows you to build HIDAPI in two generally different ways:
-1) As a [standalone package/library](#standalone-package-build);
-2) As [part of a larger CMake project](#hidapi-as-a-subdirectory).
+1. As a [standalone package/library](#standalone-package-build);
+1. As [part of a larger CMake project](#hidapi-as-a-subdirectory).
 
 **TL;DR**: if you're experienced developer and have been working with CMake projects or have been written some of your own -
 most of this document may not be of interest for you; just check variables names, its default values and the target names.
@@ -107,11 +107,11 @@ _NOTE_: HIDAPI packages built by CMake can be used with `pkg-config`, as if buil
 It is possible to build a CMake project (including HIDAPI) using MSVC compiler and Ninja (for medium and larger projects it is so much faster than msbuild).
 
 For that:
-1) Open cmd.exe;
-2) Setup MSVC build environment variables, e.g.: `vcvarsall.bat x64`, where:
+1. Open cmd.exe;
+1. Setup MSVC build environment variables, e.g.: `vcvarsall.bat x64`, where:
 	- `vcvarsall.bat` is an environment setup script of your MSVC toolchain installation;<br>For MSVC 2019 Community edition it is located at: `C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\`;
 	- `x64` -a target architecture to build;
-3) Follow general build steps, and use `Ninja` as a generator.
+1. Follow general build steps, and use `Ninja` as a generator.
 
 ### Using HIDAPI in a CMake project
 
@@ -187,7 +187,7 @@ add_subdirectory(hidapi)
 
 There are several important differences in the behavior of HIDAPI CMake build system when CMake is built as standalone package vs subdirectory build:
 
-1) In _standalone build_ a number of standard and HIDAPI-specific variables are marked as _cache variables_ or _options_.
+1. In _standalone build_ a number of standard and HIDAPI-specific variables are marked as _cache variables_ or _options_.
 This is done for convenience: when you're building HIDAPI as a standalone package and using tools like `cmake-gui` - those are highlighted as variables that can be changed and has some short description/documentation. E.g.:
 ![an example of highlighted variables in cmake-gui](documentation/cmake-gui-highlights.png "cmake-gui highlighted variables")<br>
 E.g.2:<br>
@@ -195,7 +195,7 @@ E.g.2:<br>
 When HIDAPI is built as a _subdirectory_ - **_none of the variables are marked for cache or as options_** by HIDAPI.
 This is done to let the host project's developer decide what is important (what needs to be highlighted) and what's not.
 
-2) The default behavior/default value for some of the variables is a bit different:
+1. The default behavior/default value for some of the variables is a bit different:
 	- by default, none of HIDAPI targets are [installed](https://cmake.org/cmake/help/latest/command/install.html); if required, HIDAPI targets can be installed by host project _after_ including HIDAPI subdirectory (requires CMake 3.13 or later); **or**, the default installation can be enabled by setting `HIDAPI_INSTALL_TARGETS` variable _before_ including HIDAPI subdirectory.
 		HIDAPI uses [GNUInstallDirs](https://cmake.org/cmake/help/latest/module/GNUInstallDirs.html) to specify install locations. Variables like `CMAKE_INSTALL_LIBDIR` can be used to control HIDAPI's installation locations. E.g.:
 		```cmake
@@ -207,7 +207,7 @@ This is done to let the host project's developer decide what is important (what 
 		```
 	- HIDAPI prints its version during the configuration when built as a standalone package; to enable this for subdirectory builds - set `HIDAPI_PRINT_VERSION` to TRUE before including HIDAPI;
 
-3) In a subdirectory build, HIDAPI _doesn't modify or set any of the CMake variables_ that may change the build behavior.
+1. In a subdirectory build, HIDAPI _doesn't modify or set any of the CMake variables_ that may change the build behavior.
     For instance, in a _standalone build_, if CMAKE_BUILD_TYPE or BUILD_SHARED_LIBS variables are not set, those are defaulted to "Release" and "TRUE" explicitly.
     In a _subdirectory build_, even if not set, those variables remain unchanged, so a host project's developer has a full control over the HIDAPI build configuration.
 
