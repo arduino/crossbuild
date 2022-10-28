@@ -22,28 +22,17 @@ make install
 
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 
-if [[ $CROSS_COMPILE == "i686-w64-mingw32" ]] ; then
-  # libusb-compat is a mess to compile for win32
-  # use a precompiled version from libusb-win32 project
-  curl http://download.sourceforge.net/project/libusb-win32/libusb-win32-releases/1.2.6.0/libusb-win32-bin-1.2.6.0.zip -o libusb-win32-bin-1.2.6.0.zip -L
-  unzip libusb-win32-bin-1.2.6.0.zip
-  #mkdir -p $PREFIX/bin/
-  #cp libusb-win32-bin-1.2.6.0/bin/x86/libusb0_x86.dll $PREFIX/bin/libusb0.dll
-  cp libusb-win32-bin-1.2.6.0/include/lusb0_usb.h $PREFIX/include
-  cp libusb-win32-bin-1.2.6.0/lib/gcc/libusb.a $PREFIX/lib
-else
-  if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
-    export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
-    export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
-  fi
-  cd /opt/lib/libusb-compat-0.1.7
-  export LIBUSB0_DIR=`pwd`
-  PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix=${PREFIX} --enable-static --disable-shared --host=${CROSS_COMPILE}
-  make distclean
-  PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix=${PREFIX} --enable-static --disable-shared --host=${CROSS_COMPILE}
-  make -j$(nproc)
-  make install
+if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
+  export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
+  export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
 fi
+cd /opt/lib/libusb-compat-0.1.7
+export LIBUSB0_DIR=`pwd`
+PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix=${PREFIX} --enable-static --disable-shared --host=${CROSS_COMPILE}
+make distclean
+PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix=${PREFIX} --enable-static --disable-shared --host=${CROSS_COMPILE}
+make -j$(nproc)
+make install
 
 cd /opt/lib/libftdi1-1.4
 rm -rf build && mkdir build && cd build
