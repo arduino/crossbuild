@@ -65,7 +65,7 @@ echo "*****************"
 
 export CPPFLAGS="-P"
 
-cd /opt/lib/ncurses-5.9
+cd /opt/lib/ncurses-6.3
 export NCURSES_DIR=`pwd`
 
 ./configure $EXTRAFLAGS --disable-shared --without-debug --without-ada --with-termlib --enable-termcap --without-manpages --without-progs --without-tests --host=$CROSS_COMPILE --prefix=${PREFIX}
