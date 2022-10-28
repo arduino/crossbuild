@@ -68,9 +68,9 @@ export CPPFLAGS="-P"
 cd /opt/lib/ncurses-6.3
 export NCURSES_DIR=`pwd`
 
-./configure $EXTRAFLAGS --disable-shared --without-debug --without-ada --with-termlib --enable-termcap --without-manpages --without-progs --without-tests --host=$CROSS_COMPILE --prefix=${PREFIX}
+./configure $EXTRAFLAGS --target=$CROSS_COMPILE --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host=$CROSS_COMPILE --prefix=${PREFIX}
 make distclean
-./configure $EXTRAFLAGS --disable-shared --without-debug --without-ada --with-termlib --enable-termcap --without-manpages --without-progs --without-tests --host=$CROSS_COMPILE --prefix=${PREFIX}
+./configure $EXTRAFLAGS --target=$CROSS_COMPILE --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host=$CROSS_COMPILE --prefix=${PREFIX}
 make -j$(nproc)
 make install.libs
 
