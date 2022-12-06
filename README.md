@@ -4,6 +4,7 @@
 [![Check Markdown status](https://github.com/arduino/crossbuild/actions/workflows/check-markdown-task.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-markdown-task.yml)
 [![Check License status](https://github.com/arduino/crossbuild/actions/workflows/check-license.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-license.yml)
 [![Check Taskfiles status](https://github.com/arduino/crossbuild/actions/workflows/check-taskfiles.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-taskfiles.yml)
+[![Check Shell Scripts status](https://github.com/arduino/crossbuild/actions/workflows/check-shell-task.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-shell-task.yml)
 
 This docker container has been created to allow us to easily crosscompile our c++ tools. The idea comes from [multiarch/crossbuild](https://github.com/multiarch/crossbuild), but that container unfortunately is outdated and the apt sources are no longer available.
 
