@@ -109,6 +109,7 @@ tasks:
               -type d -name '.licenses' -prune -or \
               -type d -name '__pycache__' -prune -or \
               -type d -name 'node_modules' -prune -or \
+              -type d -path './deps/*' -prune -or \
               \( \
                 -regextype posix-extended \
                 -regex '.*[.](bash|sh)' -and \
@@ -139,6 +140,7 @@ tasks:
             -type d -name '.licenses' -prune -or \
             -type d -name '__pycache__' -prune -or \
             -type d -name 'node_modules' -prune -or \
+            -type d -path './deps/*' -prune -or \
             \( \
               -regextype posix-extended \
               -regex '.*[.](bash|sh)' -and \
