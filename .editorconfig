@@ -58,3 +58,6 @@ indent_style = space
 
 [{.gitconfig,.gitmodules}]
 indent_style = tab
+
+[deps/*/*]
+ignore = true
