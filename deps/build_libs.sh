@@ -1,19 +1,19 @@
 #!/bin/bash -ex
 
-true  # Dummy command required to prevent first ShellCheck directive from having global scope.
+true # Dummy command required to prevent first ShellCheck directive from having global scope.
 
 # shellcheck disable=SC2153 # Fix false positive of ShellCheck rule SC2153.
 export PREFIX=/opt/lib/${CROSS_COMPILE}
 
 if [ "$CROSS_COMPILER" == "" ]; then
-CROSS_COMPILER=${CROSS_COMPILE}-gcc
-CROSS_COMPILER_CXX=${CROSS_COMPILE}-g++
+  CROSS_COMPILER=${CROSS_COMPILE}-gcc
+  CROSS_COMPILER_CXX=${CROSS_COMPILE}-g++
 # AR=${CROSS_COMPILE}-ar
 else
-export CC=$CROSS_COMPILER
-export CXX=$CROSS_COMPILER++
-CROSS_COMPILER=$CC
-CROSS_COMPILER_CXX=$CXX
+  export CC=$CROSS_COMPILER
+  export CXX=$CROSS_COMPILER++
+  CROSS_COMPILER=$CC
+  CROSS_COMPILER_CXX=$CXX
 fi
 cd /opt/lib/libusb-1.0.26
 LIBUSB_DIR=$(pwd)
@@ -44,7 +44,7 @@ rm -rf build && mkdir build && cd build
 
 CMAKE_EXTRA_FLAG="-DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF"
 
-if [[ $CROSS_COMPILE == "i686-w64-mingw32" ]] ; then
+if [[ $CROSS_COMPILE == "i686-w64-mingw32" ]]; then
   CMAKE_EXTRA_FLAG="$CMAKE_EXTRA_FLAG -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain-i686-w64-mingw32.cmake"
 fi
 
@@ -90,15 +90,15 @@ make distclean
 make -j"$(nproc)"
 make install-static
 
-if [[ $CROSS_COMPILE != "i686-w64-mingw32" && $CROSS_COMPILE != "x86_64-apple-darwin13" ]] ; then
-cd /opt/lib/eudev-3.2.10
-./autogen.sh
-./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
-make distclean
-./autogen.sh
-./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
-make -j"$(nproc)"
-make install
+if [[ $CROSS_COMPILE != "i686-w64-mingw32" && $CROSS_COMPILE != "x86_64-apple-darwin13" ]]; then
+  cd /opt/lib/eudev-3.2.10
+  ./autogen.sh
+  ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
+  make distclean
+  ./autogen.sh
+  ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
+  make -j"$(nproc)"
+  make install
 fi
 
 cd /opt/lib/hidapi-0.12.0
