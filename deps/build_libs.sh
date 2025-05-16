@@ -111,3 +111,9 @@ make distclean
 ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
 make -j"$(nproc)"
 make install
+
+cd /opt/lib/libxml2-2.14.3
+./autogen.sh --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
+make -j"$(nproc)"
+make install
+

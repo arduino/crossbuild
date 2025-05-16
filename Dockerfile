@@ -71,7 +71,7 @@ ENV TZ=Europe/Rome
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update && \
     apt-get install -y \
-    build-essential \
+        build-essential \
         # Intall clang compiler used by macos
         clang-13 \
         cmake \
