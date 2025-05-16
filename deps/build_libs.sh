@@ -15,7 +15,7 @@ else
   CROSS_COMPILER=$CC
   CROSS_COMPILER_CXX=$CXX
 fi
-cd /opt/lib/libusb-1.0.26
+cd /opt/lib/libusb-1.0.28
 LIBUSB_DIR=$(pwd)
 export LIBUSB_DIR
 ./configure --prefix="${PREFIX}" --with-pic --disable-udev --enable-static --disable-shared --host="${CROSS_COMPILE}"
@@ -30,7 +30,7 @@ if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
   export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
   export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
 fi
-cd /opt/lib/libusb-compat-0.1.7
+cd /opt/lib/libusb-compat-0.1.8
 LIBUSB0_DIR=$(pwd)
 export LIBUSB0_DIR
 PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}"
@@ -52,9 +52,10 @@ if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
   CMAKE_EXTRA_FLAG="$CMAKE_EXTRA_FLAG -DCMAKE_AR=$AR -DCMAKE_RANLIB=$RANLIB"
 fi
 
-cmake -DCMAKE_C_COMPILER="$CROSS_COMPILER" -DCMAKE_CXX_COMPILER="$CROSS_COMPILER_CXX" -DCMAKE_INSTALL_PREFIX="$PREFIX" "$CMAKE_EXTRA_FLAG" -DLIBUSB_INCLUDE_DIR="$PREFIX/include/libusb-1.0" -DLIBFTDI_LIBRARY_DIRS="$PREFIX/lib" -DLIBUSB_LIBRARIES="usb-1.0" ../
-make -j"$(nproc)"
-make install
+# TODO: did not build anymore (missing -L${PREFIX}/lib to libusb-1.0?)
+#cmake -DCMAKE_C_COMPILER="$CROSS_COMPILER" -DCMAKE_CXX_COMPILER="$CROSS_COMPILER_CXX" -DCMAKE_INSTALL_PREFIX="$PREFIX" "$CMAKE_EXTRA_FLAG" -DLIBUSB_INCLUDE_DIR="$PREFIX/include/libusb-1.0" -DLIBFTDI_LIBRARY_DIRS="$PREFIX/lib" -DLIBUSB_LIBRARIES="usb-1.0" ../
+#make -j"$(nproc)"
+#make install
 
 cd /opt/lib/libelf-0.8.13
 LIBELF_DIR=$(pwd)
