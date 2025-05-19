@@ -51,6 +51,7 @@ tasks:
                 -type d -name '.licenses' -prune -o \
                 -type d -name '__pycache__' -prune -o \
                 -type d -name 'node_modules' -prune -o \
+                -type d -path "./deps/*" -prune -o \
                 -regex ".*[.]md" -print
             ); do
               markdown-link-check \
@@ -78,7 +79,7 @@ tasks:
       - task: npm:install-deps
     cmds:
       - npx markdownlint-cli "**/*.md"
-  
+
   # Source: https://github.com/arduino/tooling-project-assets/blob/main/workflow-templates/assets/npm-task/Taskfile.yml
   npm:install-deps:
     desc: Install dependencies managed by npm
@@ -111,9 +112,7 @@ tasks:
               -type d -name 'node_modules' -prune -or \
               -type d -path './deps/*' -prune -or \
               \( \
-                -regextype posix-extended \
-                -regex '.*[.](bash|sh)' -and \
-                -type f \
+                -name '*.bash' -or -name '*.sh' -and -type f \
               \) \
               -print
           )
