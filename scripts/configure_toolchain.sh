@@ -2,18 +2,18 @@
 
 # Check if the CROSS_COMPILE variable is set
 if [ -z "$CROSS_COMPILE" ]; then
-    echo "Error: CROSS_COMPILE is not set. Please specify the toolchain prefix (e.g., arm-linux-gnueabihf-)."
-    exit 1
+  echo "Error: CROSS_COMPILE is not set. Please specify the toolchain prefix (e.g., arm-linux-gnueabihf-)."
+  exit 1
 fi
 
 # Detect if the toolchain is osxcross
 if [[ "$CROSS_COMPILE" == *"apple-darwin"* ]]; then
-    # Set osxcross-specific tools
-    export CC="o64-clang"
-    export CXX="o64-clang++"
+  # Set osxcross-specific tools
+  export CC="o64-clang"
+  export CXX="o64-clang++"
 else
-    export CC="${CROSS_COMPILE}-gcc"
-    export CXX="${CROSS_COMPILE}-g++"
+  export CC="${CROSS_COMPILE}-gcc"
+  export CXX="${CROSS_COMPILE}-g++"
 fi
 
 # Set default compilation flags

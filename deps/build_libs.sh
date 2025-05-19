@@ -116,4 +116,3 @@ tar -xzf /opt/lib/libxml2-2.14.3.tar.gz -C /tmp && cd /tmp/libxml2-2.14.3
 ./autogen.sh --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
 make -j"$(nproc)"
 make install
-
