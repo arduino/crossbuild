@@ -96,8 +96,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
 # o64-clang -> darwin_amd64
 ENV PATH=/opt/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf/bin/:/opt/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu/bin/:/opt/x86_64-ubuntu16.04-linux-gnu-gcc/bin/:/opt/i686-ubuntu16.04-linux-gnu/bin/:/opt/osxcross/target/bin/:$PATH
 
-COPY ./configure_toolchain.sh /
-RUN chmod +x /configure_toolchain.sh
+COPY scripts/configure_toolchain.sh /
 
 WORKDIR /workdir
 ENTRYPOINT ["/configure_toolchain.sh"]
