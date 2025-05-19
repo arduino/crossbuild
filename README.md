@@ -9,9 +9,7 @@
 This docker container has been created to allow us to easily crosscompile our c++ tools. The idea comes from [multiarch/crossbuild](https://github.com/multiarch/crossbuild), but that container unfortunately is outdated and the apt sources are no longer available.
 
 ## Starting Image
-The starting image is [ubuntu:latest](https://hub.docker.com/_/ubuntu) (The ubuntu:latest tag points to the "latest LTS", since that's the version recommended for general use.) at the time of writing latest points to Ubuntu 22.04 jammy.
-
-The starting image is only marginally important, since internally we use manually installed toolchains.
+The starting image is [ubuntu:22.04](https://hub.docker.com/_/ubuntu). The starting image is only marginally important, since internally we use manually installed toolchains.
 
 ## The Toolchains
 The toolchains are download from http://downloads.arduino.cc/tools/internal/toolchains.tar.gz .
@@ -40,4 +38,11 @@ To reduce the overall dimension of the docker image we used the  [multi-stage bu
 Usefull commands you can use:
 - `docker build -t ghcr.io/arduino/crossbuild:<version> .` to build the container
 - `docker push ghcr.io/arduino/crossbuild:<version>` to push the image to [github remote registry](https://docs.github.com/en/packages/guides/container-guides-for-github-packages)
-- `docker run -it --name crossbuild -v $PWD:/workdir ghcr.io/arduino/crossbuild:<version>` to get a shell inside the container and use the toolchains available inside (just like the CI does).
+- `docker run -it --rm -e CROSS_COMPILE=<tool-chain> -v $PWD:/workdir ghcr.io/arduino/crossbuild:latest` to get a shell inside the container with the selected toolchain.
+The image supports the following toolchain:
+
+- x86_64-ubuntu16.04-linux-gnu
+- arm-linux-gnueabihf
+- aarch64-linux-gnu
+- i686-ubuntu16.04-linux-gnu
+- x86_64-apple-darwin13
