@@ -12,7 +12,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         dh-autoreconf \
         git \
         gperf \
-        # various libs requied to compile osxcross
+        # various libs required to compile osxcross
         libxml2-dev \
         libssl-dev \
         libz-dev \
