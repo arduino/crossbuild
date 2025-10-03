@@ -29,7 +29,7 @@ make install
 
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 
-if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
+if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" || $CROSS_COMPILE == "aarch64-apple-darwin" ]]; then
   export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
   export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
 fi
@@ -51,7 +51,7 @@ if [[ $CROSS_COMPILE == "i686-w64-mingw32" ]]; then
   CMAKE_EXTRA_FLAG="$CMAKE_EXTRA_FLAG -DCMAKE_TOOLCHAIN_FILE=./cmake/Toolchain-i686-w64-mingw32.cmake"
 fi
 
-if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" ]]; then
+if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" || $CROSS_COMPILE == "aarch64-apple-darwin" ]]; then
   CMAKE_EXTRA_FLAG="$CMAKE_EXTRA_FLAG -DCMAKE_AR=$AR -DCMAKE_RANLIB=$RANLIB"
 fi
 
@@ -107,7 +107,6 @@ fi
 
 cd ${LIB_PATH}/hidapi-0.12.0
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
-libtoolize
 ./bootstrap
 ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
 make distclean
