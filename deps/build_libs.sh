@@ -18,13 +18,13 @@ else
   CROSS_COMPILER=$CC
   # CROSS_COMPILER_CXX=$CXX
 fi
-cd ${LIB_PATH}/libusb-1.0.28
+cd "${LIB_PATH}/libusb-1.0.28"
 LIBUSB_DIR=$(pwd)
 export LIBUSB_DIR
 ./configure --prefix="${PREFIX}" --with-pic --disable-udev --enable-static --disable-shared --host="${CROSS_COMPILE}"
 make distclean
 ./configure --prefix="${PREFIX}" --with-pic --disable-udev --enable-static --disable-shared --host="${CROSS_COMPILE}"
-make -j${NPROC}
+make -j"${NPROC}"
 make install
 
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
@@ -33,16 +33,16 @@ if [[ $CROSS_COMPILE == "x86_64-apple-darwin13" || $CROSS_COMPILE == "aarch64-ap
   export LIBUSB_1_0_CFLAGS=-I${PREFIX}/include/libusb-1.0
   export LIBUSB_1_0_LIBS="-L${PREFIX}/lib -lusb-1.0"
 fi
-cd ${LIB_PATH}/libusb-compat-0.1.8
+cd "${LIB_PATH}/libusb-compat-0.1.8"
 LIBUSB0_DIR=$(pwd)
 export LIBUSB0_DIR
 PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}"
 make distclean
 PKG_CONFIG_PATH="$PREFIX/lib/pkgconfig" ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}"
-make -j${NPROC}
+make -j"${NPROC}"
 make install
 
-cd ${LIB_PATH}/libftdi1-1.4
+cd "${LIB_PATH}/libftdi1-1.4"
 rm -rf build && mkdir build && cd build
 
 CMAKE_EXTRA_FLAG="-DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF"
@@ -60,13 +60,13 @@ fi
 #make -j"$(nproc)"
 #make install
 
-cd ${LIB_PATH}/libelf-0.8.13
+cd "${LIB_PATH}/libelf-0.8.13"
 LIBELF_DIR=$(pwd)
 export LIBELF_DIR
 ./configure --disable-shared --host="$CROSS_COMPILE" --prefix="${PREFIX}"
 make distclean
 ./configure --disable-shared --host="$CROSS_COMPILE" --prefix="${PREFIX}"
-make -j${NPROC}
+make -j"${NPROC}"
 make install
 
 echo "*****************"
@@ -75,47 +75,47 @@ echo "*****************"
 
 export CPPFLAGS="-P"
 
-cd ${LIB_PATH}/ncurses-6.3
+cd "${LIB_PATH}/ncurses-6.3"
 NCURSES_DIR=$(pwd)
 export NCURSES_DIR
 
 ./configure "$EXTRAFLAGS" --target="$CROSS_COMPILE" --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host="$CROSS_COMPILE" --prefix="${PREFIX}"
 make distclean
 ./configure "$EXTRAFLAGS" --target="$CROSS_COMPILE" --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host="$CROSS_COMPILE" --prefix="${PREFIX}"
-make -j${NPROC}
+make -j"${NPROC}"
 make install.libs
 
-cd ${LIB_PATH}/readline-8.0
+cd "${LIB_PATH}/readline-8.0"
 READLINE_DIR=$(pwd)
 export READLINE_DIR
 ./configure --prefix="$PREFIX" --disable-shared --host="$CROSS_COMPILE"
 make distclean
 ./configure --prefix="$PREFIX" --disable-shared --host="$CROSS_COMPILE"
-make -j${NPROC}
+make -j"${NPROC}"
 make install-static
 
 if [[ $CROSS_COMPILE != "i686-w64-mingw32" && $CROSS_COMPILE != "x86_64-apple-darwin13" && $CROSS_COMPILE != "aarch64-apple-darwin" ]]; then
-  cd ${LIB_PATH}/eudev-3.2.10
+  cd "${LIB_PATH}/eudev-3.2.10"
   ./autogen.sh
   ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
   make distclean
   ./autogen.sh
   ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
-  make -j${NPROC}
+  make -j"${NPROC}"
   make install
 fi
 
-cd ${LIB_PATH}/hidapi-0.12.0
+cd "${LIB_PATH}/hidapi-0.12.0"
 export PKG_CONFIG_PATH=$PREFIX/lib/pkgconfig
 ./bootstrap
 ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
 make distclean
 ./bootstrap
 ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
-make -j${NPROC}
+make -j"${NPROC}"
 make install
 
-tar -xzf ${LIB_PATH}/libxml2-2.14.3.tar.gz -C /tmp && cd /tmp/libxml2-2.14.3
+tar -xzf "${LIB_PATH}/libxml2-2.14.3.tar.gz" -C /tmp && cd /tmp/libxml2-2.14.3
 ./autogen.sh --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
-make -j${NPROC}
+make -j"${NPROC}"
 make install
