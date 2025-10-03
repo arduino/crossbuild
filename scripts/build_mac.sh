@@ -12,9 +12,8 @@ cp -r "${BASE_PATH}/deps" "${BASE_PATH}/build/macos/deps"
 mkdir -p "${BASE_PATH}/build/macos/dist"
 
 LIB_PATH=${BASE_PATH}/build/macos/deps \
-PREFIX=${BASE_PATH}/build/macos/dist \
-CROSS_COMPILER=cc \
-CROSS_COMPILE=aarch64-apple-darwin \
-NPROC=8 \
-./deps/build_libs.sh
-
+  PREFIX=${BASE_PATH}/build/macos/dist \
+  CROSS_COMPILER=cc \
+  CROSS_COMPILE=aarch64-apple-darwin \
+  NPROC=8 \
+  ./deps/build_libs.sh
