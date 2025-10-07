@@ -1,4 +1,7 @@
 #!/bin/sh
+# This scripts builds all dependencies in ./deps for macOS and places them in ./build/macos/dist.
+# It is intended to be used in a native macOS environment or github macos runner.
+# It requires the necessary build tools including pkg-config, autoconf, automake, libtool.
 
 set -ex
 
