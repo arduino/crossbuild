@@ -1,0 +1,132 @@
+ARG CROSS_COMPILE=aarch64-w64-mingw32
+ARG BASE_VERSION=ubuntu-22.04-1
+
+# -----------------------------------
+# Build image (to be discarded later)
+# -----------------------------------
+FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS build
+
+# Download cross compiler
+WORKDIR /build
+RUN wget https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz
+# COPY llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz .
+RUN tar -xf llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz -C /opt
+
+# Setup env variables for build
+ARG CROSS_COMPILE
+ENV CROSS_COMPILE=${CROSS_COMPILE}
+ENV PREFIX=/opt/lib/${CROSS_COMPILE}
+ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+ENV PATH=/opt/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64/bin/:$PATH
+
+# Build libusb-1.0.29
+WORKDIR /build
+RUN wget https://github.com/libusb/libusb/releases/download/v1.0.29/libusb-1.0.29.tar.bz2
+RUN tar xvf libusb-1.0.29.tar.bz2
+WORKDIR /build/libusb-1.0.29
+RUN ./configure --prefix="${PREFIX}" --with-pic --disable-udev --enable-static --disable-shared --host="${CROSS_COMPILE}"
+RUN make -j$(nproc)
+RUN make install
+
+# Build libusb-compat-0.1.8
+WORKDIR /build
+RUN wget https://github.com/libusb/libusb-compat-0.1/releases/download/v0.1.8/libusb-compat-0.1.8.tar.bz2
+RUN tar xvf libusb-compat-0.1.8.tar.bz2
+WORKDIR /build/libusb-compat-0.1.8
+RUN ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}"
+RUN make
+RUN make install
+
+# Build libftdi1-1.5
+WORKDIR /build
+RUN wget https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.5.tar.bz2
+RUN tar xvf libftdi1-1.5.tar.bz2
+WORKDIR /build/libftdi1-1.5
+RUN mkdir build
+WORKDIR /build/libftdi1-1.5/build
+RUN cmake -DCMAKE_C_COMPILER="${CROSS_COMPILE}-gcc" -DCMAKE_CXX_COMPILER="${CROSS_COMPILE}-g++" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
+# clang do not support the -soname flag
+RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/link.txt
+RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/relink.txt
+RUN make
+RUN make install
+
+# Build libelf-0.8.13
+WORKDIR /build
+RUN wget https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz
+RUN tar xvf libelf-0.8.13.tar.gz
+WORKDIR /build/libelf-0.8.13
+RUN ./configure --disable-shared --host="$CROSS_COMPILE" --prefix="${PREFIX}"
+RUN make -j$(nproc)
+RUN make install
+
+# Build ncurses-6.6
+WORKDIR /build
+RUN wget https://ftp.gnu.org/gnu/ncurses/ncurses-6.6.tar.gz
+RUN tar xfv ncurses-6.6.tar.gz
+RUN export > /build/export.sh
+WORKDIR /build/ncurses-6.6
+RUN ./configure --target="$CROSS_COMPILE" --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host="$CROSS_COMPILE" --prefix="${PREFIX}"
+RUN make -j$(nproc)
+RUN make install.libs
+
+# # Build readline-8.3
+# WORKDIR /build
+# RUN wget http://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz
+# RUN tar xfv readline-8.3.tar.gz
+# WORKDIR /build/readline-8.3
+# RUN ./configure --prefix="$PREFIX" --disable-shared --host="$CROSS_COMPILE"
+# RUN make -j$(nproc)
+# RUN make install-static
+
+# # Build eudev-3.2.14
+# WORKDIR /build
+# RUN wget https://github.com/eudev-project/eudev/releases/download/v3.2.14/eudev-3.2.14.tar.gz
+# RUN tar xfv eudev-3.2.14.tar.gz
+# WORKDIR /build/eudev-3.2.14
+# RUN ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
+# RUN make -j$(nproc)
+# RUN make install
+
+# Build hidapi-0.15.0
+WORKDIR /build
+RUN wget https://github.com/libusb/hidapi/archive/refs/tags/hidapi-0.15.0.tar.gz
+RUN tar xfv hidapi-0.15.0.tar.gz
+WORKDIR /build/hidapi-hidapi-0.15.0
+RUN ./bootstrap
+RUN ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
+RUN make -j$(nproc)
+RUN make install
+
+# Build libxml2-2.15.1
+WORKDIR /build
+RUN wget https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.1.tar.xz
+RUN tar xfv libxml2-2.15.1.tar.xz
+WORKDIR /build/libxml2-2.15.1
+RUN ./configure --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
+RUN make -j$(nproc)
+RUN make install
+
+# Output build environment variables in case we need them later for debugging
+WORKDIR /build
+RUN export > build_env.sh
+
+# -----------
+# Final image 
+# -----------
+FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION}
+
+# Copy all the installed toolchains and compiled libs
+COPY --from=build /opt /opt
+# Uncomment to copy the entire build folder for debugging purposes
+# COPY --from=build /build /build
+
+# Prepare ENV
+ARG CROSS_COMPILE
+ENV CROSS_COMPILE=${CROSS_COMPILE}
+ENV PREFIX=/opt/lib/${CROSS_COMPILE}
+ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+ENV PATH=/opt/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64/bin/:$PATH
+
+WORKDIR /workdir
+CMD ["bash"]
