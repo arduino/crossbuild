@@ -1,5 +1,5 @@
 ARG CROSS_COMPILE=aarch64-w64-mingw32
-ARG BASE_VERSION=ubuntu-22.04-1
+ARG BASE_VERSION=none
 
 # -----------------------------------
 # Build image (to be discarded later)

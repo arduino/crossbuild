@@ -1,5 +1,5 @@
-ARG CROSS_COMPILE=x86_64-ubuntu16.04-linux-gnu
-ARG BASE_VERSION=ubuntu-22.04-1
+ARG CROSS_COMPILE=x86_64-linux-gnu
+ARG BASE_VERSION=none
 
 # -----------------------------------
 # Build image (to be discarded later)
