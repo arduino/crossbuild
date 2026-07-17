@@ -18,5 +18,8 @@ RUN apt-get install -y build-essential \
                        flex \
                        unzip \
                        curl \
-                       wget
+                       wget \
+                       clang \
+                       lld \
+                       libc6-dev
 CMD ["bash"]

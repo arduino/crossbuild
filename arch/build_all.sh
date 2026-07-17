@@ -3,6 +3,12 @@
 VERSION=ubuntu-24.04-1
 docker build -f Dockerfile-base \
              -t ghcr.io/arduino/crossbuild-base:$VERSION .
+docker build --build-arg BASE_VERSION=$VERSION --build-arg CROSS_COMPILE=aarch64-apple-darwin25.1 \
+             -f Dockerfile-macos-all \
+             -t ghcr.io/arduino/crossbuild-macos-arm64:$VERSION .
+docker build --build-arg BASE_VERSION=$VERSION \
+             -f Dockerfile-macos-all \
+             -t ghcr.io/arduino/crossbuild-macos-amd64:$VERSION .
 docker build --build-arg BASE_VERSION=$VERSION \
              -f Dockerfile-linux-amd64 \
              -t ghcr.io/arduino/crossbuild-linux-amd64:$VERSION .
