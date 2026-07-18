@@ -9,7 +9,6 @@ FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS build
 # Download cross compiler
 WORKDIR /build
 RUN wget https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz
-# COPY llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz .
 RUN tar -xf llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz -C /opt
 
 # Setup env variables for build
