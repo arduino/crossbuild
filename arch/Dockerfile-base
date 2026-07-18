@@ -1,25 +1,12 @@
-FROM ubuntu:24.04
-
-# This is the base image used to build all the cross-compiler toolchains and libraries.
-# It is based on Ubuntu 22.04 LTS and includes all the necessary dependencies to build.
+ARG BASE_IMAGE=ubuntu:24.04
+FROM ${BASE_IMAGE}
 
 ENV TZ=Europe/Rome
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y build-essential \
-                       cmake \
-                       dh-autoreconf \
-                       git \
-                       gperf \
-                       pkg-config \
-                       tar \
-                       bison \
-                       flex \
-                       unzip \
-                       curl \
-                       wget \
-                       clang \
-                       lld \
-                       libc6-dev
+RUN apt-get install -y build-essential cmake dh-autoreconf git gperf \
+                       pkg-config tar bison flex unzip curl wget
+# Install clang and lld only for Ubuntu 24.04 (used for macOS/Windows cross-compilation)
+RUN if [ "$BASE_IMAGE" == "ubuntu:24.04" ]; then apt-get install -y clang lld libc6-dev; fi
 CMD ["bash"]
