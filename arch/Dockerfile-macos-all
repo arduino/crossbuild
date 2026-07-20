@@ -2,13 +2,19 @@ ARG CROSS_COMPILE=x86_64-apple-darwin25.1
 ARG BASE_VERSION=none
 ARG OSXCROSS_VERSION=26.1
 
+# Base image
+# ----------
+FROM ghcr.io/crazy-max/osxcross:${OSXCROSS_VERSION}-ubuntu AS osxcross
+FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS base
+# Download cross compilers
+COPY --from=osxcross /osxcross /opt/osxcross
+RUN apt-get update -y
+RUN apt-get install -y clang lld libc6-dev
+
 # -----------------------------------
 # Build image (to be discarded later)
 # -----------------------------------
-FROM ghcr.io/crazy-max/osxcross:${OSXCROSS_VERSION}-ubuntu AS osxcross
-FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS build
-COPY --from=osxcross /osxcross /opt/osxcross
-RUN apt-get update && apt-get install 
+FROM base AS build
 
 # Setup env variables for build
 WORKDIR /build
@@ -127,31 +133,24 @@ RUN ./configure --prefix="$PREFIX" --disable-shared --enable-static --without-py
 RUN make -j$(nproc)
 RUN make install
 
-# Output build environment variables in case we need them later for debugging
-WORKDIR /build
+# Output a recap of what is in lib folder with corresponding architecture
+WORKDIR $PREFIX/lib
+RUN readelf -h *.a | grep 'Class\|File\|Machine' > /root/libs.txt
+
+# Output build environment variables
 RUN export > /opt/build_env.sh
 
 # -----------
 # Final image 
 # -----------
-FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION}
+FROM base
 
 # Copy all the installed toolchains and compiled libs
 COPY --from=build /opt /opt
 # Uncomment to copy the entire build folder for debugging purposes
-COPY --from=build /build /build
+# COPY --from=build /build /build
 
 # Prepare ENV
-RUN echo source /opt/build_env.sh >> /root/.bashrc
-# ARG CROSS_COMPILE
-# ENV CROSS_COMPILE=${CROSS_COMPILE}
-# ENV CC=${CROSS_COMPILE}-cc
-# ENV CXX=${CROSS_COMPILE}-c++
-# ENV PREFIX=/opt/lib/${CROSS_COMPILE}
-# ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
-# ENV PATH="/opt/osxcross/bin:$PATH"
-# ENV LD_LIBRARY_PATH="/opt/osxcross/lib"
-# ENV PKG_CONFIG=/usr/bin/pkg-config
-
-WORKDIR /workdir
+WORKDIR /root
+RUN echo source /opt/build_env.sh >> .bashrc
 CMD ["bash"]

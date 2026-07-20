@@ -1,8 +1,14 @@
 ARG CROSS_COMPILE=x86_64-linux-gnu
 ARG DEB_PACKAGES=
 ARG BASE_VERSION=none
+ARG CC=${CROSS_COMPILE}-gcc
+ARG CXX=${CROSS_COMPILE}-g++
 
+# Base image
+# ----------
 FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS base
+
+# Download cross compiler if required
 ARG DEB_PACKAGES
 RUN if [ -n "$DEB_PACKAGES" ]; then apt-get install -y $DEB_PACKAGES; fi
 
@@ -11,11 +17,10 @@ RUN if [ -n "$DEB_PACKAGES" ]; then apt-get install -y $DEB_PACKAGES; fi
 # -----------------------------------
 FROM base AS build
 
-# Download cross compiler
-WORKDIR /build
-
 # Setup env variables for build
 ARG CROSS_COMPILE
+ARG CC
+ARG CXX
 ENV PREFIX=/opt/lib/${CROSS_COMPILE}
 ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 ENV PATH=/opt/${CROSS_COMPILE}-gcc/bin/:$PATH
@@ -54,7 +59,7 @@ RUN tar xvf libftdi1-1.5.tar.bz2
 WORKDIR /build/libftdi1-1.5
 RUN mkdir build
 WORKDIR /build/libftdi1-1.5/build
-RUN cmake -DCMAKE_C_COMPILER="${CROSS_COMPILE}-gcc" -DCMAKE_CXX_COMPILER="${CROSS_COMPILE}-g++" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
+RUN cmake -DCMAKE_C_COMPILER="$CC" -DCMAKE_CXX_COMPILER="$CXX" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
 RUN make
 RUN make install
 
@@ -120,7 +125,7 @@ RUN make install
 
 # Output a recap of what is in lib folder with corresponding architecture
 WORKDIR $PREFIX/lib
-RUN readelf -h *.a | grep 'Class\|File\|Machine' > libs.txt
+RUN readelf -h *.a | grep 'Class\|File\|Machine' > /root/libs.txt
 
 # Output build environment variables
 RUN export > /opt/build_env.sh
@@ -133,10 +138,9 @@ FROM base
 # Copy all the installed toolchains and compiled libs
 COPY --from=build /opt /opt
 # Uncomment to copy the entire build folder for debugging purposes
-COPY --from=build /build /build
+# COPY --from=build /build /build
 
 # Prepare ENV
-RUN echo source /opt/build_env.sh >> /root/.bashrc
-
-WORKDIR /workdir
+WORKDIR /root
+RUN echo source /opt/build_env.sh >> .bashrc
 CMD ["bash"]

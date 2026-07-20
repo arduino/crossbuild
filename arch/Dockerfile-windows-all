@@ -36,6 +36,15 @@ RUN ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${
 RUN make
 RUN make install
 
+# Build libconfuse-3.2.2
+WORKDIR /build
+RUN wget https://github.com/libconfuse/libconfuse/releases/download/v3.3/confuse-3.3.tar.xz
+RUN tar xvf confuse-3.3.tar.xz
+WORKDIR /build/confuse-3.3
+RUN ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}" --disable-examples
+RUN make
+RUN make install
+
 # Build libftdi1-1.5
 WORKDIR /build
 RUN wget https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.5.tar.bz2
@@ -69,7 +78,30 @@ RUN ./configure --target="$CROSS_COMPILE" --without-pthread --enable-database --
 RUN make -j$(nproc)
 RUN make install.libs
 
-# # Build readline-8.3
+# Build readline-8.3
+# did not compile with this error:
+# 2.707 terminal.c:265:35: warning: declaration of 'struct winsize' will not be visible outside of this function [-Wvisibility]
+# 2.707   265 | _rl_tcgetwinsize (int tty, struct winsize *wp)
+# 2.707       |                                   ^
+# 2.710 terminal.c:265:1: error: conflicting types for '_rl_tcgetwinsize'
+# 2.710   265 | _rl_tcgetwinsize (int tty, struct winsize *wp)
+# 2.710       | ^
+# 2.710 ./rlwinsize.h:58:12: note: previous declaration is here
+# 2.710    58 | extern int _rl_tcgetwinsize (int, struct winsize *);
+# 2.711       |            ^
+# 2.711 terminal.c:277:35: warning: declaration of 'struct winsize' will not be visible outside of this function [-Wvisibility]
+# 2.711   277 | _rl_tcsetwinsize (int tty, struct winsize *wp)
+# 2.711       |                                   ^
+# 2.714 terminal.c:277:1: error: conflicting types for '_rl_tcsetwinsize'
+# 2.714   277 | _rl_tcsetwinsize (int tty, struct winsize *wp)
+# 2.714       | ^
+# 2.714 ./rlwinsize.h:59:13: note: previous declaration is here
+# 2.714    59 | extern void _rl_tcsetwinsize (int, struct winsize *);
+# 2.715       |             ^
+# 2.719 4 warnings and 2 errors generated.
+# 2.728 make: *** [Makefile:110: terminal.o] Error 1
+# 2.728 make: *** Waiting for unfinished jobs....
+
 # WORKDIR /build
 # RUN wget http://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz
 # RUN tar xfv readline-8.3.tar.gz
@@ -77,15 +109,6 @@ RUN make install.libs
 # RUN ./configure --prefix="$PREFIX" --disable-shared --host="$CROSS_COMPILE"
 # RUN make -j$(nproc)
 # RUN make install-static
-
-# # Build eudev-3.2.14
-# WORKDIR /build
-# RUN wget https://github.com/eudev-project/eudev/releases/download/v3.2.14/eudev-3.2.14.tar.gz
-# RUN tar xfv eudev-3.2.14.tar.gz
-# WORKDIR /build/eudev-3.2.14
-# RUN ./configure --enable-static --disable-gudev --disable-introspection --disable-shared --disable-blkid --disable-kmod --disable-manpages --prefix="$PREFIX" --host="${CROSS_COMPILE}"
-# RUN make -j$(nproc)
-# RUN make install
 
 # Build hidapi-0.15.0
 WORKDIR /build
@@ -106,9 +129,12 @@ RUN ./configure --prefix="$PREFIX" --disable-shared --enable-static --without-py
 RUN make -j$(nproc)
 RUN make install
 
-# Output build environment variables in case we need them later for debugging
-WORKDIR /build
-RUN export > build_env.sh
+# Output a recap of what is in lib folder with corresponding architecture
+WORKDIR $PREFIX/lib
+RUN readelf -h *.a | grep 'Class\|File\|Machine' > /root/libs.txt
+
+# Output build environment variables
+RUN export > /opt/build_env.sh
 
 # -----------
 # Final image 
@@ -121,11 +147,6 @@ COPY --from=build /opt /opt
 # COPY --from=build /build /build
 
 # Prepare ENV
-ARG CROSS_COMPILE
-ENV CROSS_COMPILE=${CROSS_COMPILE}
-ENV PREFIX=/opt/lib/${CROSS_COMPILE}
-ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
-ENV PATH=/opt/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64/bin/:$PATH
-
-WORKDIR /workdir
+WORKDIR /root
+RUN echo source /opt/build_env.sh >> .bashrc
 CMD ["bash"]
