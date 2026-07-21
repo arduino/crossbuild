@@ -135,7 +135,7 @@ RUN make install
 
 # Output a recap of what is in lib folder with corresponding architecture
 WORKDIR $PREFIX/lib
-RUN readelf -h *.a | grep 'Class\|File\|Machine' > /root/libs.txt
+RUN readelf -h *.a | grep 'Class\|File\|Machine' > /opt/libs.txt
 
 # Output build environment variables
 RUN export > /opt/build_env.sh
