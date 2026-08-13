@@ -129,7 +129,7 @@ WORKDIR $PREFIX/lib
 RUN mkdir /tmp/a && find . -name "*.a" -exec ar x --output /tmp/a/ {} \; && file /tmp/a/* > /opt/libs.txt
 
 # Output build environment variables
-RUN export > /opt/build_env.sh
+RUN export | grep -v PWD > /opt/build_env.sh
 
 # -----------
 # Final image 
