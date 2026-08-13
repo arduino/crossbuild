@@ -1,4 +1,4 @@
-# Docker crossbuild
+# Docker C/C++ crossbuild toolchains
 
 [![Sync Labels status](https://github.com/arduino/crossbuild/actions/workflows/sync-labels.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/sync-labels.yml)
 [![Check Markdown status](https://github.com/arduino/crossbuild/actions/workflows/check-markdown-task.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-markdown-task.yml)
@@ -6,43 +6,86 @@
 [![Check Taskfiles status](https://github.com/arduino/crossbuild/actions/workflows/check-taskfiles.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-taskfiles.yml)
 [![Check Shell Scripts status](https://github.com/arduino/crossbuild/actions/workflows/check-shell-task.yml/badge.svg)](https://github.com/arduino/crossbuild/actions/workflows/check-shell-task.yml)
 
-This docker container has been created to allow us to easily crosscompile our c++ tools. The idea comes from [multiarch/crossbuild](https://github.com/multiarch/crossbuild), but that container unfortunately is outdated and the apt sources are no longer available.
+The goal is to provide a docker container to simplify the creation of static builds of C/C++ tools.
+We try to accomplish this by
 
-## Starting Image
-The starting image is [ubuntu:22.04](https://hub.docker.com/_/ubuntu). The starting image is only marginally important, since internally we use manually installed toolchains.
+* Installing the cross-compilers needed to build a specific target from a Linux x86_64 host.
+* Precompiling the most used libraries statically (like libusb, hidapi, ncurses, libxml, etc...).
+* Setting up an ENV with [sensible defaults](#environment-setup) for the most common build systems.
 
-## The Toolchains
-The toolchains are download from http://downloads.arduino.cc/tools/internal/toolchains.tar.gz .
-Inside that archive there are:
-- **gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu** toolchain to crosscompile for *linux_arm64* (downloaded from [here](https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-aarch64-linux-gnu.tar.xz))
-- **gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf** toolchain used to crosscompile for *linux_arm* (downloaded from [here](https://developer.arm.com/-/media/Files/downloads/gnu-a/8.3-2019.03/binrel/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz))
-- **i686-ubuntu16.04-linux-gnu** toolchain to crosscompile for *linux_386* (32bit)
-- **x86_64-ubuntu16.04-linux-gnu-gcc** toolchain to crosscompile for *linux_amd64*
-- [**osxcross**](https://github.com/tpoechtrager/osxcross) toolchain to crosscompile for *darwin_amd64*. Inside `osxcross/tarballs/` there is already `MacOSX10.15.sdk.tar.xz`: the SDK required by macos to crosscompile (we tried with SDK version 10.09 but it was too old)
+## Starting base image
 
-Regarding the two ubuntu toolchains: in the beginning we tried to use the ones shipped with 12.04 but they caused some build errors because they were too old, so we upgraded to 16.04 ones. They are created using [crosstool-ng](https://github.com/crosstool-ng/crosstool-ng).
+For Windows and MacOS the starting base image is [ubuntu:24.04](https://hub.docker.com/_/ubuntu), in this case the starting image is only marginally important, since internally we use manually installed toolchains.
 
-Apparently, osxcross does not have tags or version so we checkout a specific commit in order to have a pinned environment.
+For Linux we want to use the oldest Ubuntu LTS version possible to maximize compatibility with older libc, at the time of writing, there are ubuntu:16.04 and ubuntu:18.04.
 
-The last toolchain required to crosscompile for windows is `mingw-w64` and it's installed through `apt` along with other useful packages.
+## Toolchain used
 
-Once the toolchains are installed in `/opt` we add the binaries to the `PATH` env variable, to easily use them in the CI.
+All of this won't be possible without the amazing work made from the following people:
 
-## Copying and Building Libraries
-As explained in the other [`README.md`](deps/README.md) there are some libraries that needs to be compiled, in order to create static binaries. This is achieved by copying `deps/` directory inside `/opt/lib/` in the container and then by using [`build_libs.sh`](deps/build_libs.sh) script [here](Dockerfile#L53-L59)
+- Linux: We install the standard gcc cross-compilers provided by Ubuntu.
+- MacOS: We layer on top of [@crazy-max's container ghcr.io/crazy-max/osxcross](https://ghcr.io/crazy-max/osxcross), which is a ready-to-use distribution of [@tpoechtrager's osxcross](https://github.com/tpoechtrager/osxcross).
+- Windows: We install the mingw build made by [@mstorsjo](https://github.com/mstorsjo/llvm-mingw), that supports targeting Win/ARM64.
 
-## Multi-stage build
-To reduce the overall dimension of the docker image we used the  [multi-stage build](https://learnk8s.io/blog/smaller-docker-images). But the image still 8GB.
+Once the toolchains are installed we add the binaries to the `PATH` env variable, to easily use them in the CI.
 
-## How to build and use the container
-Usefull commands you can use:
-- `docker build -t ghcr.io/arduino/crossbuild:<version> .` to build the container
-- `docker push ghcr.io/arduino/crossbuild:<version>` to push the image to [github remote registry](https://docs.github.com/en/packages/guides/container-guides-for-github-packages)
-- `docker run -it --rm -e CROSS_COMPILE=<tool-chain> -v $PWD:/workdir ghcr.io/arduino/crossbuild:latest` to get a shell inside the container with the selected toolchain.
-The image supports the following toolchain:
+## Environment setup
 
-- x86_64-ubuntu16.04-linux-gnu
-- arm-linux-gnueabihf
-- aarch64-linux-gnu
-- i686-ubuntu16.04-linux-gnu
-- x86_64-apple-darwin13
+The containers are provided with some enviroment variables defaults that should help compiling with the most common build systems (Makefile, autoconf, cmake...):
+
+- `CROSS_COMPILE`: Contains the "triple" of the target system to be used in `--host` for configure (for example: `x86_64-linux-gnu` or `aarch64-apple-darwin25.1`).
+- `PREFIX`: Contains the installation folder of the pre-build libraries (usually `/opt/lib/${CROSS_COMPILE}`).
+- `PKG_CONFIG_PATH`: Containts the installations folder of the pkg-config data files (usually `${PREFIX}/lib/pkgconfig`).
+- `PATH`: Is updated with the path to the cross-compilers.
+- `CC` and `CXX`: Contains the basename of the GCC and G++ compilers, respectively.
+- `TARGET_OS`: Contains the target OS, it may be `windows`, `linux`, or `macos`.
+
+On MacOS containers we also provide:
+- `AR`: Contains the basename of the cross-compiler `ar` tool.
+- `RANLIB`: Contains the basename of the cross-compiler `ranlib` tool.
+- `LD_LIBRARY_PATH`: Is updated with the osxcross lib folder.
+
+## Pre-built libraries avaiable in the docker images
+
+Here a list of the pre-built libraries, avaiable in the `${PREFIX}` folder:
+
+| Library       | Version | Notes                      |
+| ------------- | ------- | -------------------------- |
+| libconfuse    | 3.2.2   |                            |
+| libelf        | 0.8.13  |                            |
+| libeudev      | 3.2.14  | Only for Linux             |
+| libftdi1      | 1.5     |                            |
+| libhidapi     | 0.15.0  |                            |
+| libncurses    | 6.6     |                            |
+| libreadline   | 8.3     | Did not compile on Windows |
+| libusb        | 1.0.29  |                            |
+| libusb-compat | 0.1.8   |                            |
+| libxml2       | 2.15.3  |                            |
+
+## How to build and use the containers
+
+The host machine is supposed to be a Linux amd64.
+
+To build the containers just run the `./build_all_containers.sh` script. It may take 10/20 minutes to complete the build of all the containters, depending on internet connection speed and machine capabilities.
+
+To use a container:
+- Create a `build.sh` script in the root directory of the project source. This script will be automatically run by the container.
+- Choose the [correct toolchain](#available-toolchain-images) to build for the desired target.
+- Run `docker run -it --rm -w /build -v .:/build $TOOLCHAINIMAGE`, where
+  * `-it` makes an interactive session
+  * `--rm` will remove the container after the run is completed
+  * `-w /build` sets the working directory to `/build` inside the container
+  * `-v .:/build` binds the current directory (that should be the project root) to the `/build` directory inside the container
+  * `$TOOLCHAINIMAGE` is the toolchain image chosen
+
+## Available toolchain images
+
+- ghcr.io/arduino/crossbuild-linux-amd64:ubuntu-16.04-1
+- ghcr.io/arduino/crossbuild-linux-arm64:ubuntu-16.04-1
+- ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-16.04-1
+- ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-18.04-1
+- ghcr.io/arduino/crossbuild-linux-i686:ubuntu-18.04-1
+- ghcr.io/arduino/crossbuild-macos-amd64:ubuntu-24.04-1
+- ghcr.io/arduino/crossbuild-macos-arm64:ubuntu-24.04-1
+- ghcr.io/arduino/crossbuild-windows-amd64:ubuntu-24.04-1
+- ghcr.io/arduino/crossbuild-windows-arm64:ubuntu-24.04-1
