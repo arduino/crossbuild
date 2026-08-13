@@ -29,6 +29,7 @@ ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 ENV PATH="/opt/osxcross/bin:$PATH"
 ENV LD_LIBRARY_PATH="/opt/osxcross/lib"
 ENV PKG_CONFIG=/usr/bin/pkg-config
+ENV TARGET_OS=macos
 
 # Build libusb-1.0.29
 WORKDIR /build

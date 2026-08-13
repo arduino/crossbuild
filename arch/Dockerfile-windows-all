@@ -17,6 +17,7 @@ ENV CROSS_COMPILE=${CROSS_COMPILE}
 ENV PREFIX=/opt/lib/${CROSS_COMPILE}
 ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 ENV PATH=/opt/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64/bin/:$PATH
+ENV TARGET_OS=windows
 
 # Build libusb-1.0.29
 WORKDIR /build

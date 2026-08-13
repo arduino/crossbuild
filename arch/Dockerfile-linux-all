@@ -24,6 +24,7 @@ ARG CXX
 ENV PREFIX=/opt/lib/${CROSS_COMPILE}
 ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 ENV PATH=/opt/${CROSS_COMPILE}-gcc/bin/:$PATH
+ENV TARGET_OS=linux
 
 # Build libusb-1.0.29
 WORKDIR /build
