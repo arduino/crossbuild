@@ -65,8 +65,19 @@ WORKDIR /build
 RUN wget https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz
 RUN tar xvf libelf-0.8.13.tar.gz
 WORKDIR /build/libelf-0.8.13
-RUN ./configure --disable-shared --host="$CROSS_COMPILE" --prefix="${PREFIX}"
-RUN make -j$(nproc)
+# Shenanigans to make it compile with mingw-w64
+COPY scripts/mingw-conftest-wrapper.sh /scripts/mingw-conftest-wrapper.sh
+RUN MINGW_CC_REAL=${CROSS_COMPILE}-gcc \
+    CC=/scripts/mingw-conftest-wrapper.sh \
+    AR=${CROSS_COMPILE}-ar \
+    RANLIB=${CROSS_COMPILE}-ranlib \
+    CFLAGS="-std=gnu89" \
+    ./configure --prefix="${PREFIX}"
+RUN MINGW_CC_REAL=${CROSS_COMPILE}-gcc \
+    make CC=/scripts/mingw-conftest-wrapper.sh \
+         AR=${CROSS_COMPILE}-ar \
+         RANLIB=${CROSS_COMPILE}-ranlib \
+         -j$(nproc)
 RUN make install
 
 # Build ncurses-6.6
