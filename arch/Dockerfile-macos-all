@@ -154,4 +154,5 @@ COPY --from=build /opt /opt
 # Prepare ENV
 WORKDIR /root
 RUN echo source /opt/build_env.sh >> .bashrc
-CMD ["bash"]
+
+CMD ["bash", "-c", "source /opt/build_env.sh && ./build.sh"]
