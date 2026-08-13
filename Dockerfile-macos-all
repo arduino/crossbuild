@@ -65,7 +65,8 @@ RUN tar xvf libftdi1-1.5.tar.bz2
 WORKDIR /build/libftdi1-1.5
 RUN mkdir build
 WORKDIR /build/libftdi1-1.5/build
-RUN cmake -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
+RUN cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
+          -DCMAKE_INSTALL_PREFIX="${PREFIX}" \
           -DSHAREDLIBS=OFF \
           -DBUILD_TESTS=OFF \
           -DPYTHON_BINDINGS=OFF \

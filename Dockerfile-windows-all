@@ -53,7 +53,7 @@ RUN tar xvf libftdi1-1.5.tar.bz2
 WORKDIR /build/libftdi1-1.5
 RUN mkdir build
 WORKDIR /build/libftdi1-1.5/build
-RUN cmake -DCMAKE_C_COMPILER="${CROSS_COMPILE}-gcc" -DCMAKE_CXX_COMPILER="${CROSS_COMPILE}-g++" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
+RUN cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_C_COMPILER="${CROSS_COMPILE}-gcc" -DCMAKE_CXX_COMPILER="${CROSS_COMPILE}-g++" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
 # clang do not support the -soname flag
 RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/link.txt
 RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/relink.txt
