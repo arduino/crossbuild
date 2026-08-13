@@ -31,6 +31,12 @@ docker build -f Dockerfile-linux-all \
 VERSION=ubuntu-18.04-1
 docker build -f Dockerfile-linux-all \
              --build-arg BASE_VERSION=$VERSION \
+             --build-arg CROSS_COMPILE=arm-linux-gnueabihf \
+             --build-arg DEB_PACKAGES="gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf" \
+             -t ghcr.io/arduino/crossbuild-linux-armhf:$VERSION .
+
+docker build -f Dockerfile-linux-all \
+             --build-arg BASE_VERSION=$VERSION \
              --build-arg CROSS_COMPILE=i686-linux-gnu \
              --build-arg DEB_PACKAGES="gcc-i686-linux-gnu g++-i686-linux-gnu" \
              -t ghcr.io/arduino/crossbuild-linux-i686:$VERSION .
