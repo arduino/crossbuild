@@ -45,9 +45,11 @@ On MacOS containers we also provide:
 - `RANLIB`: Contains the basename of the cross-compiler `ranlib` tool.
 - `LD_LIBRARY_PATH`: Is updated with the osxcross lib folder.
 
+A toolchain file for CMake is also provided on each image on `/opt/cmake_toolchain.cmake`. It could be used with `-DCMAKE_TOOLCHAIN_FILE=/opt/cmake_toolchain.cmake` flag on CMake.
+
 ## Pre-built libraries avaiable in the docker images
 
-Here a list of the pre-built libraries, avaiable in the `${PREFIX}` folder:
+Here the list of pre-built libraries, avaiable in the `${PREFIX}` folder:
 
 | Library       | Version | Notes                      |
 | ------------- | ------- | -------------------------- |
@@ -80,12 +82,12 @@ To use a container:
 
 ## Available toolchain images
 
-- ghcr.io/arduino/crossbuild-linux-amd64:ubuntu-16.04-1
-- ghcr.io/arduino/crossbuild-linux-arm64:ubuntu-16.04-1
-- ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-16.04-1
-- ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-18.04-1
-- ghcr.io/arduino/crossbuild-linux-i686:ubuntu-18.04-1
-- ghcr.io/arduino/crossbuild-macos-amd64:ubuntu-24.04-1
-- ghcr.io/arduino/crossbuild-macos-arm64:ubuntu-24.04-1
-- ghcr.io/arduino/crossbuild-windows-amd64:ubuntu-24.04-1
-- ghcr.io/arduino/crossbuild-windows-arm64:ubuntu-24.04-1
+- Linux-32bit: `ghcr.io/arduino/crossbuild-linux-i686:ubuntu-18.04-1`
+- Linux-64bit: `ghcr.io/arduino/crossbuild-linux-amd64:ubuntu-16.04-1`
+- Linux-ARM64: `ghcr.io/arduino/crossbuild-linux-arm64:ubuntu-16.04-1`
+- Linux-ARM (Ubuntu 16.04): `ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-16.04-1`
+- Linux-ARM (Ubuntu 18.04): `ghcr.io/arduino/crossbuild-linux-armhf:ubuntu-18.04-1`
+- macOS-64bit: `ghcr.io/arduino/crossbuild-macos-amd64:ubuntu-24.04-1`
+- macOS-ARM64: `ghcr.io/arduino/crossbuild-macos-arm64:ubuntu-24.04-1`
+- Windows-64bit: `ghcr.io/arduino/crossbuild-windows-amd64:ubuntu-24.04-1`
+- Windows-ARM64: `ghcr.io/arduino/crossbuild-windows-arm64:ubuntu-24.04-1`

@@ -23,7 +23,7 @@ ARG CC
 ARG CXX
 ENV PREFIX=/opt/lib/${CROSS_COMPILE}
 ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
-ENV PATH=/opt/${CROSS_COMPILE}-gcc/bin/:$PATH
+ENV CROSS_TOOLCHAIN_ROOT=/usr
 ENV TARGET_OS=linux
 
 # Build libusb-1.0.29
@@ -130,6 +130,24 @@ RUN mkdir /tmp/a && find . -name "*.a" -exec ar x --output /tmp/a/ {} \; && file
 
 # Output build environment variables
 RUN export | grep -v PWD > /opt/build_env.sh
+
+# Create CMake toolchain file for cross-compilation
+RUN cat <<EOT > /opt/cmake_toolchain.cmake
+set(CMAKE_SYSTEM_NAME Linux)
+
+set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-gcc")
+set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-g++")
+set(CMAKE_RC_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-windres")
+set(CMAKE_AR "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ar")
+set(CMAKE_RANLIB "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ranlib")
+
+# Third-party static libs (opt/lib/...).
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_PREFIX_PATH}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+EOT
 
 # -----------
 # Final image 

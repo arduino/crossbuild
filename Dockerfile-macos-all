@@ -29,6 +29,7 @@ ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
 ENV PATH="/opt/osxcross/bin:$PATH"
 ENV LD_LIBRARY_PATH="/opt/osxcross/lib"
 ENV PKG_CONFIG=/usr/bin/pkg-config
+ENV CROSS_TOOLCHAIN_ROOT=/opt/osxcross
 ENV TARGET_OS=macos
 
 # Build libusb-1.0.29
@@ -134,6 +135,24 @@ WORKDIR /build/libxml2-2.15.3
 RUN ./configure --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
 RUN make -j$(nproc)
 RUN make install
+
+# Create CMake toolchain file for cross-compilation
+RUN cat <<EOT > /opt/cmake_toolchain.cmake
+set(CMAKE_SYSTEM_NAME Darwin)
+
+set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-cc")
+set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-c++")
+set(CMAKE_RC_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-windres")
+set(CMAKE_AR "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ar")
+set(CMAKE_RANLIB "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ranlib")
+
+# Third-party static libs (opt/lib/...).
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_PREFIX_PATH}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+EOT
 
 # Output a recap of what is in lib folder with corresponding architecture
 WORKDIR $PREFIX/lib
