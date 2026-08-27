@@ -1,0 +1,185 @@
+ARG CROSS_COMPILE=x86_64-w64-mingw32
+ARG BASE_VERSION=none
+
+# -----------------------------------
+# Build image (to be discarded later)
+# -----------------------------------
+FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION} AS build
+
+# Download cross compiler
+WORKDIR /build
+RUN wget https://github.com/mstorsjo/llvm-mingw/releases/download/20251216/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz
+RUN tar -xf llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64.tar.xz -C /opt
+
+# Setup env variables for build
+ARG CROSS_COMPILE
+ENV CROSS_COMPILE=${CROSS_COMPILE}
+ENV PREFIX=/opt/lib/${CROSS_COMPILE}
+ENV PKG_CONFIG_PATH=${PREFIX}/lib/pkgconfig
+ENV CROSS_TOOLCHAIN_ROOT=/opt/llvm-mingw-20251216-msvcrt-ubuntu-22.04-x86_64
+ENV PATH=${CROSS_TOOLCHAIN_ROOT}/bin/:$PATH
+ENV TARGET_OS=windows
+
+# Build libusb-1.0.29
+WORKDIR /build
+RUN wget https://github.com/libusb/libusb/releases/download/v1.0.29/libusb-1.0.29.tar.bz2
+RUN tar xvf libusb-1.0.29.tar.bz2
+WORKDIR /build/libusb-1.0.29
+RUN ./configure --prefix="${PREFIX}" --with-pic --disable-udev --enable-static --disable-shared --host="${CROSS_COMPILE}"
+RUN make -j$(nproc)
+RUN make install
+
+# Build libusb-compat-0.1.8
+WORKDIR /build
+RUN wget https://github.com/libusb/libusb-compat-0.1/releases/download/v0.1.8/libusb-compat-0.1.8.tar.bz2
+RUN tar xvf libusb-compat-0.1.8.tar.bz2
+WORKDIR /build/libusb-compat-0.1.8
+RUN ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}"
+RUN make
+RUN make install
+
+# Build libconfuse-3.2.2
+WORKDIR /build
+RUN wget https://github.com/libconfuse/libconfuse/releases/download/v3.3/confuse-3.3.tar.xz
+RUN tar xvf confuse-3.3.tar.xz
+WORKDIR /build/confuse-3.3
+RUN ./configure --prefix="${PREFIX}" --enable-static --disable-shared --host="${CROSS_COMPILE}" --disable-examples
+RUN make
+RUN make install
+
+# Build libftdi1-1.5
+WORKDIR /build
+RUN wget https://www.intra2net.com/en/developer/libftdi/download/libftdi1-1.5.tar.bz2
+RUN tar xvf libftdi1-1.5.tar.bz2
+WORKDIR /build/libftdi1-1.5
+RUN mkdir build
+WORKDIR /build/libftdi1-1.5/build
+RUN cmake -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DCMAKE_C_COMPILER="${CROSS_COMPILE}-gcc" -DCMAKE_CXX_COMPILER="${CROSS_COMPILE}-g++" -DCMAKE_INSTALL_PREFIX="${PREFIX}" -DSHAREDLIBS=OFF -DBUILD_TESTS=OFF -DPYTHON_BINDINGS=OFF -DEXAMPLES=OFF -DFTDI_EEPROM=OFF ..
+# clang do not support the -soname flag
+RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/link.txt
+RUN sed -i 's/-Wl,-soname,libftdi1.so.2//' src/CMakeFiles/ftdi1.dir/relink.txt
+RUN make
+RUN make install
+
+# Build libelf-0.8.13
+WORKDIR /build
+RUN wget https://fossies.org/linux/misc/old/libelf-0.8.13.tar.gz
+RUN tar xvf libelf-0.8.13.tar.gz
+WORKDIR /build/libelf-0.8.13
+# Shenanigans to make it compile with mingw-w64
+COPY scripts/mingw-conftest-wrapper.sh /scripts/mingw-conftest-wrapper.sh
+RUN MINGW_CC_REAL=${CROSS_COMPILE}-gcc \
+    CC=/scripts/mingw-conftest-wrapper.sh \
+    AR=${CROSS_COMPILE}-ar \
+    RANLIB=${CROSS_COMPILE}-ranlib \
+    CFLAGS="-std=gnu89" \
+    ./configure --prefix="${PREFIX}"
+RUN MINGW_CC_REAL=${CROSS_COMPILE}-gcc \
+    make CC=/scripts/mingw-conftest-wrapper.sh \
+         AR=${CROSS_COMPILE}-ar \
+         RANLIB=${CROSS_COMPILE}-ranlib \
+         -j$(nproc)
+RUN make install
+
+# Build ncurses-6.6
+WORKDIR /build
+RUN wget https://ftp.gnu.org/gnu/ncurses/ncurses-6.6.tar.gz
+RUN tar xfv ncurses-6.6.tar.gz
+RUN export > /build/export.sh
+WORKDIR /build/ncurses-6.6
+RUN ./configure --target="$CROSS_COMPILE" --without-pthread --enable-database --enable-sp-funcs --enable-term-driver --without-shared --without-debug --without-ada --enable-termcap --without-manpages --without-progs --without-tests --host="$CROSS_COMPILE" --prefix="${PREFIX}"
+RUN make -j$(nproc)
+RUN make install.libs
+
+# Build readline-8.3
+# did not compile with this error:
+# 2.707 terminal.c:265:35: warning: declaration of 'struct winsize' will not be visible outside of this function [-Wvisibility]
+# 2.707   265 | _rl_tcgetwinsize (int tty, struct winsize *wp)
+# 2.707       |                                   ^
+# 2.710 terminal.c:265:1: error: conflicting types for '_rl_tcgetwinsize'
+# 2.710   265 | _rl_tcgetwinsize (int tty, struct winsize *wp)
+# 2.710       | ^
+# 2.710 ./rlwinsize.h:58:12: note: previous declaration is here
+# 2.710    58 | extern int _rl_tcgetwinsize (int, struct winsize *);
+# 2.711       |            ^
+# 2.711 terminal.c:277:35: warning: declaration of 'struct winsize' will not be visible outside of this function [-Wvisibility]
+# 2.711   277 | _rl_tcsetwinsize (int tty, struct winsize *wp)
+# 2.711       |                                   ^
+# 2.714 terminal.c:277:1: error: conflicting types for '_rl_tcsetwinsize'
+# 2.714   277 | _rl_tcsetwinsize (int tty, struct winsize *wp)
+# 2.714       | ^
+# 2.714 ./rlwinsize.h:59:13: note: previous declaration is here
+# 2.714    59 | extern void _rl_tcsetwinsize (int, struct winsize *);
+# 2.715       |             ^
+# 2.719 4 warnings and 2 errors generated.
+# 2.728 make: *** [Makefile:110: terminal.o] Error 1
+# 2.728 make: *** Waiting for unfinished jobs....
+
+# WORKDIR /build
+# RUN wget http://ftp.gnu.org/gnu/readline/readline-8.3.tar.gz
+# RUN tar xfv readline-8.3.tar.gz
+# WORKDIR /build/readline-8.3
+# RUN ./configure --prefix="$PREFIX" --disable-shared --host="$CROSS_COMPILE"
+# RUN make -j$(nproc)
+# RUN make install-static
+
+# Build hidapi-0.15.0
+WORKDIR /build
+RUN wget https://github.com/libusb/hidapi/archive/refs/tags/hidapi-0.15.0.tar.gz
+RUN tar xfv hidapi-0.15.0.tar.gz
+WORKDIR /build/hidapi-hidapi-0.15.0
+RUN ./bootstrap
+RUN ./configure --prefix="$PREFIX" --enable-static --disable-shared --host="$CROSS_COMPILE"
+RUN make -j$(nproc)
+RUN make install
+
+# Build libxml2-2.15.1
+WORKDIR /build
+RUN wget https://download.gnome.org/sources/libxml2/2.15/libxml2-2.15.1.tar.xz
+RUN tar xfv libxml2-2.15.1.tar.xz
+WORKDIR /build/libxml2-2.15.1
+RUN ./configure --prefix="$PREFIX" --disable-shared --enable-static --without-python --without-iconv --host="$CROSS_COMPILE"
+RUN make -j$(nproc)
+RUN make install
+
+# Create CMake toolchain file for cross-compilation
+RUN cat <<EOT > /opt/cmake_toolchain.cmake
+set(CMAKE_SYSTEM_NAME Windows)
+
+set(CMAKE_C_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-gcc")
+set(CMAKE_CXX_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-g++")
+set(CMAKE_RC_COMPILER "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-windres")
+set(CMAKE_AR "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ar")
+set(CMAKE_RANLIB "${CROSS_TOOLCHAIN_ROOT}/bin/${CROSS_COMPILE}-ranlib")
+
+# Third-party static libs (opt/lib/...).
+set(CMAKE_FIND_ROOT_PATH "${CMAKE_PREFIX_PATH}" "${CROSS_TOOLCHAIN_ROOT}/${CROSS_COMPILE}")
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+EOT
+
+# Output a recap of what is in lib folder with corresponding architecture
+WORKDIR $PREFIX/lib
+RUN mkdir /tmp/a && find . -name "*.a" -exec ar x --output /tmp/a/ {} \; && file /tmp/a/* > /opt/libs.txt
+
+# Output build environment variables
+RUN export | grep -v PWD > /opt/build_env.sh
+
+# -----------
+# Final image 
+# -----------
+FROM ghcr.io/arduino/crossbuild-base:${BASE_VERSION}
+
+# Copy all the installed toolchains and compiled libs
+COPY --from=build /opt /opt
+# Uncomment to copy the entire build folder for debugging purposes
+# COPY --from=build /build /build
+
+# Prepare ENV
+WORKDIR /root
+RUN echo source /opt/build_env.sh >> .bashrc
+COPY entrypoint.sh /root/entrypoint.sh
+
+ENTRYPOINT ["/root/entrypoint.sh"]
